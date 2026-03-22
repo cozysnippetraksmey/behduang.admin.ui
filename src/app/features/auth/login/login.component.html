@@ -1,0 +1,112 @@
+<div class="login-page">
+  <div class="login-card">
+
+    <!-- Header -->
+    <div class="login-header">
+      <div class="logo">
+        <span class="logo-icon">🏪</span>
+      </div>
+      <h1 class="login-title">Behdaung Admin</h1>
+      <p class="login-subtitle">Sign in to manage your store</p>
+    </div>
+
+    <!-- Error Banner -->
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <span class="error-icon">⚠️</span>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Email + Password Form -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="login-form">
+
+      <!-- Email Field -->
+      <div class="field-group">
+        <label for="email" class="field-label">Email address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="field-input"
+          [class.field-input--error]="emailControl.invalid && emailControl.touched"
+          placeholder="admin@example.com"
+          autocomplete="email"
+          [disabled]="loading()"
+        />
+        @if (emailControl.touched && emailControl.hasError('required')) {
+          <p class="field-error">Email is required.</p>
+        }
+        @if (emailControl.touched && emailControl.hasError('email')) {
+          <p class="field-error">Please enter a valid email address.</p>
+        }
+      </div>
+
+      <!-- Password Field -->
+      <div class="field-group">
+        <label for="password" class="field-label">Password</label>
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            class="field-input password-input"
+            [class.field-input--error]="passwordControl.invalid && passwordControl.touched"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            [disabled]="loading()"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          >
+            {{ showPassword() ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        @if (passwordControl.touched && passwordControl.hasError('required')) {
+          <p class="field-error">Password is required.</p>
+        }
+        @if (passwordControl.touched && passwordControl.hasError('minlength')) {
+          <p class="field-error">Password must be at least 8 characters.</p>
+        }
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loading()"
+      >
+        @if (loading()) {
+          <span class="spinner"></span>
+          Signing in…
+        } @else {
+          Sign In
+        }
+      </button>
+
+    </form>
+
+    <!-- Divider -->
+    <div class="divider">
+      <span class="divider-line"></span>
+      <span class="divider-text">or</span>
+      <span class="divider-line"></span>
+    </div>
+
+    <!-- Google Sign-In Button -->
+    <div class="google-btn-wrapper">
+      <div #googleBtn id="google-signin-button"></div>
+    </div>
+
+    <!-- Footer hint -->
+    <p class="login-hint">
+      Don't have a password yet? Sign in with Google first,<br />
+      then set a password in your account settings.
+    </p>
+
+  </div>
+</div>
+

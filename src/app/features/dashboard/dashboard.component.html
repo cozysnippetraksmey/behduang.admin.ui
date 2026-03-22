@@ -1,0 +1,54 @@
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-icon">🏪</span>
+      <span class="sidebar-name">Behdaung Admin</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="/dashboard" routerLinkActive="nav-item--active" [routerLinkActiveOptions]="{ exact: true }">
+        <span class="nav-icon">📊</span><span>Overview</span>
+      </a>
+      <a class="nav-item" routerLink="/dashboard/products" routerLinkActive="nav-item--active">
+        <span class="nav-icon">📦</span><span>Products</span>
+      </a>
+      <a class="nav-item" routerLink="/dashboard/images" routerLinkActive="nav-item--active">
+        <span class="nav-icon">🖼️</span><span>Images</span>
+      </a>
+      <a class="nav-item" routerLink="/dashboard/users" routerLinkActive="nav-item--active">
+        <span class="nav-icon">👥</span><span>Users</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      @if (currentUser()) {
+        <div class="user-chip">
+          @if (currentUser()!.picture) {
+            <img [src]="currentUser()!.picture!" [alt]="currentUser()!.name ?? 'Admin'" class="user-avatar" />
+          } @else {
+            <div class="user-avatar user-avatar--fallback">
+              {{ (currentUser()!.name ?? currentUser()!.email).charAt(0).toUpperCase() }}
+            </div>
+          }
+          <div class="user-info">
+            <p class="user-name">{{ currentUser()!.name ?? 'Admin' }}</p>
+            <p class="user-email">{{ currentUser()!.email }}</p>
+          </div>
+        </div>
+      }
+      <div class="logout-actions">
+        <button class="btn-logout" (click)="onLogout()" [disabled]="logoutLoading()">🚪 Sign Out</button>
+        <button class="btn-logout-all" (click)="onLogoutEverywhere()" [disabled]="logoutLoading()">Sign Out All Devices</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Dynamic content area -->
+  <main class="main-content">
+    <router-outlet />
+  </main>
+
+</div>
+

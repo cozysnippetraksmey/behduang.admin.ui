@@ -1,0 +1,48 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Overview</h1>
+      <p class="page-subtitle">Welcome back! Here's a snapshot of your store.</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="loading-spinner">Loading statistics…</div>
+  } @else if (stats()) {
+    <div class="stats-grid">
+
+      <a class="stat-card" routerLink="/dashboard/products">
+        <div class="stat-icon">📦</div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats()!.products }}</div>
+          <div class="stat-label">Products</div>
+          <div class="stat-hint">View &amp; manage catalogue →</div>
+        </div>
+      </a>
+
+      <a class="stat-card" routerLink="/dashboard/images">
+        <div class="stat-icon">🖼️</div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats()!.images }}</div>
+          <div class="stat-label">Images</div>
+          <div class="stat-hint">Upload &amp; manage assets →</div>
+        </div>
+      </a>
+
+      <a class="stat-card" routerLink="/dashboard/users">
+        <div class="stat-icon">👥</div>
+        <div class="stat-body">
+          <div class="stat-value">{{ stats()!.users }}</div>
+          <div class="stat-label">Users</div>
+          <div class="stat-hint">Manage roles &amp; accounts →</div>
+        </div>
+      </a>
+
+    </div>
+  }
+</div>
+

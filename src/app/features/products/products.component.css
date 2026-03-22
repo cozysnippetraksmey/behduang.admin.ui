@@ -1,0 +1,38 @@
+/* ── Product thumbnail ───────────────────────────────────────────────────── */
+.product-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-thumb--empty {
+  background: #f3f4f6;
+  font-size: 1.25rem;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.2rem;
+}
+
+.product-desc {
+  font-size: 0.8rem;
+  color: #6b7280;
+  max-width: 280px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.price-cell {
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+}
+

@@ -1,0 +1,128 @@
+<div class="page">
+  <!-- ── Page Header ──────────────────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Users</h1>
+      <p class="page-subtitle">Manage user accounts and roles. Total: {{ total() }}</p>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div class="alert-error">{{ error() }}</div>
+  }
+
+  @if (success()) {
+    <div class="alert-success">✅ {{ success() }}</div>
+  }
+
+  <!-- ── Users Table ──────────────────────────────────────────────────────── -->
+  @if (loading()) {
+    <div class="loading-spinner">Loading users…</div>
+  } @else if (users().length === 0) {
+    <div class="empty-state">
+      <span style="font-size:3rem">👥</span>
+      <p>No users found.</p>
+    </div>
+  } @else {
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Last Login</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user.id) {
+            <tr [class.row--self]="user.id === currentUserId">
+              <td>
+                <div class="user-cell">
+                  @if (user.picture) {
+                    <img [src]="user.picture" [alt]="user.name ?? 'User'" class="user-avatar" />
+                  } @else {
+                    <div class="user-avatar user-avatar--fallback">{{ getInitial(user) }}</div>
+                  }
+                  <div class="user-info">
+                    <div class="user-name">
+                      {{ user.name ?? '—' }}
+                      @if (user.id === currentUserId) {
+                        <span class="badge badge--self">You</span>
+                      }
+                    </div>
+                    <div class="user-email">{{ user.email }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [class.badge--admin]="user.role === 'admin'"
+                      [class.badge--user]="user.role === 'user'">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td class="text-muted">{{ formatDate(user.last_login_at) }}</td>
+              <td class="text-muted">{{ formatDate(user.created_at) }}</td>
+              <td>
+                <div class="action-group">
+                  <!-- Role toggle — disabled for self -->
+                  <button class="btn-icon btn-role"
+                          [disabled]="updatingRoleId() === user.id || user.id === currentUserId"
+                          (click)="toggleRole(user)"
+                          [title]="user.role === 'admin' ? 'Demote to user' : 'Promote to admin'">
+                    {{ updatingRoleId() === user.id ? '⏳' : (user.role === 'admin' ? '👤' : '🛡️') }}
+                  </button>
+                  <!-- Delete — disabled for self -->
+                  <button class="btn-icon btn-delete"
+                          [disabled]="user.id === currentUserId"
+                          (click)="openDeleteConfirm(user)"
+                          title="Delete user">
+                    🗑️
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="pagination-btn" (click)="goToPage(page() - 1)" [disabled]="page() === 1">‹ Prev</button>
+        @for (n of pageNumbers; track n) {
+          <button class="pagination-btn" [class.pagination-btn--active]="n === page()"
+                  (click)="goToPage(n)">{{ n }}</button>
+        }
+        <button class="pagination-btn" (click)="goToPage(page() + 1)" [disabled]="page() === totalPages">Next ›</button>
+      </div>
+    }
+  }
+</div>
+
+<!-- ── Delete Confirmation Dialog ─────────────────────────────────────────── -->
+@if (deleteId()) {
+  <div class="modal-backdrop" (click)="cancelDelete()">
+    <div class="modal modal--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>🗑️ Delete User</h2>
+      </div>
+      <div class="modal-body">
+        <p>
+          Are you sure you want to permanently delete
+          <strong>{{ deleteUser()?.name ?? deleteUser()?.email }}</strong>?
+          <strong>This cannot be undone.</strong>
+        </p>
+        <div class="modal-footer">
+          <button class="btn-secondary" (click)="cancelDelete()" [disabled]="deleting()">Cancel</button>
+          <button class="btn-danger" (click)="onDelete()" [disabled]="deleting()">
+            {{ deleting() ? 'Deleting…' : 'Delete User' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+
