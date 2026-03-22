@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import type { AuthResult, LoginRequest, SetPasswordRequest, TokenPair, UserProfile } from '../models/auth.model';
+import type { AuthResult, LoginRequest, RegisterRequest, RegisterResponse, SetPasswordRequest, TokenPair, UserProfile } from '../models/auth.model';
 
 /**
  * Lightweight session-presence flag stored in localStorage.
@@ -100,6 +100,26 @@ export class AuthService {
       ),
     );
     this.applySession(result);
+  }
+
+  /**
+   * Registers a new account with email + password.
+   * Returns a success message — the user must verify their email before logging in.
+   */
+  async register(request: RegisterRequest): Promise<RegisterResponse> {
+    return firstValueFrom(
+      this.http.post<RegisterResponse>(`${environment.apiUrl}/auth/register`, request),
+    );
+  }
+
+  /**
+   * Re-sends the verification email to the given address.
+   * The API enforces a 5-minute cooldown per user.
+   */
+  async resendVerification(email: string): Promise<void> {
+    await firstValueFrom(
+      this.http.post(`${environment.apiUrl}/auth/resend-verification`, { email }),
+    );
   }
 
   /**

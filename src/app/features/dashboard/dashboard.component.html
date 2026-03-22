@@ -11,15 +11,17 @@
       <a class="nav-item" routerLink="/dashboard" routerLinkActive="nav-item--active" [routerLinkActiveOptions]="{ exact: true }">
         <span class="nav-icon">📊</span><span>Overview</span>
       </a>
-      <a class="nav-item" routerLink="/dashboard/products" routerLinkActive="nav-item--active">
-        <span class="nav-icon">📦</span><span>Products</span>
-      </a>
-      <a class="nav-item" routerLink="/dashboard/images" routerLinkActive="nav-item--active">
-        <span class="nav-icon">🖼️</span><span>Images</span>
-      </a>
-      <a class="nav-item" routerLink="/dashboard/users" routerLinkActive="nav-item--active">
-        <span class="nav-icon">👥</span><span>Users</span>
-      </a>
+      @if (isAdmin()) {
+        <a class="nav-item" routerLink="/dashboard/products" routerLinkActive="nav-item--active">
+          <span class="nav-icon">📦</span><span>Products</span>
+        </a>
+        <a class="nav-item" routerLink="/dashboard/images" routerLinkActive="nav-item--active">
+          <span class="nav-icon">🖼️</span><span>Images</span>
+        </a>
+        <a class="nav-item" routerLink="/dashboard/users" routerLinkActive="nav-item--active">
+          <span class="nav-icon">👥</span><span>Users</span>
+        </a>
+      }
     </nav>
 
     <div class="sidebar-footer">
@@ -33,7 +35,12 @@
             </div>
           }
           <div class="user-info">
-            <p class="user-name">{{ currentUser()!.name ?? 'Admin' }}</p>
+            <p class="user-name">
+              {{ currentUser()!.name ?? 'User' }}
+              <span class="role-badge" [class.role-badge--admin]="isAdmin()">
+                {{ isAdmin() ? 'Admin' : 'Member' }}
+              </span>
+            </p>
             <p class="user-email">{{ currentUser()!.email }}</p>
           </div>
         </div>

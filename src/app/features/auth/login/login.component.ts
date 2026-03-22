@@ -3,23 +3,25 @@ import {
   inject,
   signal,
   AfterViewInit,
+  OnInit,
   ElementRef,
   ViewChild,
   NgZone,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../core/services/auth.service';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css',
 })
-export class LoginComponent implements AfterViewInit {
+export class LoginComponent implements AfterViewInit, OnInit {
   private readonly fb          = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router      = inject(Router);
@@ -41,7 +43,38 @@ export class LoginComponent implements AfterViewInit {
   readonly errorMessage = signal<string | null>(null);
   readonly showPassword = signal(false);
 
+  /** Green success banner — shown when returning from a verified email link. */
+  readonly successMessage = signal<string | null>(null);
+  /** Blue info / warning banner — shown for token errors from the verify-email redirect. */
+  readonly infoMessage    = signal<string | null>(null);
+
+  /** Shown when the API returns 403 (email not verified) on login. */
+  readonly showResend     = signal(false);
+  readonly resendLoading  = signal(false);
+  readonly resendSuccess  = signal(false);
+
   // ─── Lifecycle ────────────────────────────────────────────────────────────────
+
+  ngOnInit(): void {
+    const params = this.route.snapshot.queryParamMap;
+
+    // Success: user just clicked the verification link in their email
+    if (params.get('emailVerified') === 'true') {
+      this.successMessage.set('✅ Email verified! You can now sign in.');
+    }
+
+    // Error redirects from GET /auth/verify-email
+    const error = params.get('error');
+    if (error === 'token_expired') {
+      this.infoMessage.set('⏳ Your verification link has expired. Request a new one below.');
+      this.showResend.set(true);
+    } else if (error === 'token_used') {
+      this.infoMessage.set('✔️ This link has already been used. Please sign in.');
+    } else if (error === 'invalid_token') {
+      this.infoMessage.set('❌ Invalid verification link. Please request a new one below.');
+      this.showResend.set(true);
+    }
+  }
 
   ngAfterViewInit(): void {
     this.initGoogleSignIn();
@@ -53,16 +86,41 @@ export class LoginComponent implements AfterViewInit {
     if (this.form.invalid || this.loading()) return;
 
     this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.showResend.set(false);
+    this.resendSuccess.set(false);
     this.loading.set(true);
 
     try {
       const { email, password } = this.form.getRawValue();
       await this.authService.loginWithEmailPassword({ email: email!, password: password! });
-      await this.assertAdminAndRedirect();
+      await this.redirectAfterLogin();
     } catch (err: unknown) {
-      this.errorMessage.set(this.extractMessage(err, 'Invalid email or password.'));
+      if (err instanceof HttpErrorResponse && err.status === 403) {
+        this.errorMessage.set('Your email address has not been verified yet.');
+        this.showResend.set(true);
+      } else {
+        this.errorMessage.set(this.extractMessage(err, 'Invalid email or password.'));
+      }
     } finally {
       this.loading.set(false);
+    }
+  }
+
+  async onResendVerification(): Promise<void> {
+    const email = this.form.getRawValue().email;
+    if (!email || this.resendLoading()) return;
+
+    this.resendLoading.set(true);
+    this.resendSuccess.set(false);
+
+    try {
+      await this.authService.resendVerification(email);
+      this.resendSuccess.set(true);
+    } catch (err: unknown) {
+      this.errorMessage.set(this.extractMessage(err, 'Could not resend. Please try again later.'));
+    } finally {
+      this.resendLoading.set(false);
     }
   }
 
@@ -108,7 +166,7 @@ export class LoginComponent implements AfterViewInit {
 
     try {
       await this.authService.loginWithGoogleIdToken(idToken);
-      await this.assertAdminAndRedirect();
+      await this.redirectAfterLogin();
     } catch (err: unknown) {
       this.errorMessage.set(this.extractMessage(err, 'Google sign-in failed. Please try again.'));
     } finally {
@@ -118,19 +176,6 @@ export class LoginComponent implements AfterViewInit {
 
   // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-  /**
-   * After a successful login, verify the user is an admin.
-   * If not, force logout and show an access-denied error —
-   * this prevents an infinite redirect loop between /login and /dashboard.
-   */
-  private async assertAdminAndRedirect(): Promise<void> {
-    if (!this.authService.isAdmin()) {
-      await this.authService.logout();
-      this.errorMessage.set('Access denied: this portal is for admins only.');
-      return;
-    }
-    await this.redirectAfterLogin();
-  }
 
   private async redirectAfterLogin(): Promise<void> {
     const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/dashboard';

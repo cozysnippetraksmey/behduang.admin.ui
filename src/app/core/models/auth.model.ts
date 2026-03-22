@@ -32,3 +32,18 @@ export interface SetPasswordRequest {
   newPassword: string;
 }
 
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  name?: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+

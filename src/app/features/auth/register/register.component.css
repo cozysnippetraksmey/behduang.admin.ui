@@ -1,5 +1,5 @@
 /* ── Layout ─────────────────────────────────────────────────────────────────── */
-.login-page {
+.register-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -8,7 +8,7 @@
   padding: 1.5rem;
 }
 
-.login-card {
+.register-card {
   background: #ffffff;
   border-radius: 16px;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
@@ -18,7 +18,7 @@
 }
 
 /* ── Header ─────────────────────────────────────────────────────────────────── */
-.login-header {
+.register-header {
   text-align: center;
   margin-bottom: 2rem;
 }
@@ -35,14 +35,14 @@
   margin: 0 auto 1rem;
 }
 
-.login-title {
+.register-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
   margin: 0 0 0.25rem;
 }
 
-.login-subtitle {
+.register-subtitle {
   font-size: 0.875rem;
   color: #6b7280;
   margin: 0;
@@ -62,91 +62,8 @@
   gap: 0.5rem;
 }
 
-/* ── Success banner ──────────────────────────────────────────────────────────── */
-.success-banner {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  color: #16a34a;
-  font-size: 0.875rem;
-  font-weight: 500;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-/* ── Info / warning banner ───────────────────────────────────────────────────── */
-.info-banner {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
-  color: #92400e;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
-}
-
-/* ── Resend verification section ─────────────────────────────────────────────── */
-.resend-section {
-  background: #f8faff;
-  border: 1px solid #c7d2fe;
-  border-radius: 8px;
-  padding: 0.875rem 1rem;
-  margin-bottom: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.resend-hint {
-  font-size: 0.8125rem;
-  color: #374151;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.resend-sent {
-  font-size: 0.875rem;
-  color: #16a34a;
-  font-weight: 500;
-  margin: 0;
-}
-
-.btn-resend {
-  align-self: flex-start;
-  padding: 0.4rem 0.875rem;
-  background: #4f46e5;
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: background 0.15s;
-}
-
-.btn-resend:hover:not(:disabled) {
-  background: #4338ca;
-}
-
-.btn-resend:disabled {
-  background: #a5b4fc;
-  cursor: not-allowed;
-}
-
-.spinner-sm {
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-top-color: #fff;
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-}
-
 /* ── Form ────────────────────────────────────────────────────────────────────── */
-.login-form {
+.register-form {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -162,6 +79,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
+}
+
+.optional {
+  font-weight: 400;
+  color: #9ca3af;
 }
 
 .field-input {
@@ -201,6 +123,12 @@
   margin: 0;
 }
 
+.field-hint {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
 /* ── Password toggle ─────────────────────────────────────────────────────────── */
 .password-wrapper {
   position: relative;
@@ -224,7 +152,7 @@
   color: #6b7280;
 }
 
-/* ── Buttons ─────────────────────────────────────────────────────────────────── */
+/* ── Button ──────────────────────────────────────────────────────────────────── */
 .btn-primary {
   width: 100%;
   padding: 0.75rem 1rem;
@@ -269,49 +197,56 @@
   to { transform: rotate(360deg); }
 }
 
-/* ── Divider ─────────────────────────────────────────────────────────────────── */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1.5rem 0 1.25rem;
-}
-
-.divider-line {
-  flex: 1;
-  height: 1px;
-  background: #e5e7eb;
-}
-
-.divider-text {
-  font-size: 0.8125rem;
-  color: #9ca3af;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-/* ── Google button wrapper ──────────────────────────────────────────────────── */
-.google-btn-wrapper {
-  display: flex;
-  justify-content: center;
-}
-
-/* ── Footer hint ─────────────────────────────────────────────────────────────── */
-.login-hint {
+/* ── Footer link ─────────────────────────────────────────────────────────────── */
+.login-link {
   font-size: 0.875rem;
   color: #6b7280;
   text-align: center;
   margin: 1.25rem 0 0;
-  line-height: 1.5;
 }
 
-.register-link {
+.link {
   color: #4f46e5;
   font-weight: 500;
   text-decoration: none;
 }
 
-.register-link:hover {
+.link:hover {
   text-decoration: underline;
+}
+
+/* ── Success screen ──────────────────────────────────────────────────────────── */
+.success-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0;
+  gap: 1rem;
+}
+
+.success-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.success-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.success-body {
+  font-size: 0.9375rem;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.success-hint {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0;
 }
 

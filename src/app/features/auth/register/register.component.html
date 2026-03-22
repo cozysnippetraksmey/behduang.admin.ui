@@ -1,0 +1,139 @@
+<div class="register-page">
+  <div class="register-card">
+
+    <!-- ── Success screen ─────────────────────────────────────────────────────── -->
+    @if (registered()) {
+      <div class="success-screen">
+        <div class="success-icon">📧</div>
+        <h2 class="success-title">Check your inbox</h2>
+        <p class="success-body">
+          We sent a verification link to
+          <strong>{{ registeredEmail() }}</strong>.<br />
+          Click the link in the email to activate your account, then come back to sign in.
+        </p>
+        <p class="success-hint">Didn't receive it? Check your spam folder, or wait a minute and try again.</p>
+        <button class="btn-primary" (click)="goToLogin()">Back to Sign In</button>
+      </div>
+    } @else {
+
+    <!-- ── Header ─────────────────────────────────────────────────────────────── -->
+    <div class="register-header">
+      <div class="logo">
+        <span class="logo-icon">🏪</span>
+      </div>
+      <h1 class="register-title">Create an account</h1>
+      <p class="register-subtitle">Behdaung Admin Portal</p>
+    </div>
+
+    <!-- ── Error Banner ───────────────────────────────────────────────────────── -->
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <span class="error-icon">⚠️</span>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- ── Form ──────────────────────────────────────────────────────────────── -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate class="register-form">
+
+      <!-- Name (optional) -->
+      <div class="field-group">
+        <label for="name" class="field-label">Name <span class="optional">(optional)</span></label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          class="field-input"
+          placeholder="Your name"
+          autocomplete="name"
+          [disabled]="loading()"
+        />
+      </div>
+
+      <!-- Email -->
+      <div class="field-group">
+        <label for="email" class="field-label">Email address</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          class="field-input"
+          [class.field-input--error]="emailControl.invalid && emailControl.touched"
+          placeholder="you@example.com"
+          autocomplete="email"
+          [disabled]="loading()"
+        />
+        @if (emailControl.touched && emailControl.hasError('required')) {
+          <p class="field-error">Email is required.</p>
+        }
+        @if (emailControl.touched && emailControl.hasError('email')) {
+          <p class="field-error">Please enter a valid email address.</p>
+        }
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label for="password" class="field-label">Password</label>
+        <div class="password-wrapper">
+          <input
+            id="password"
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            class="field-input password-input"
+            [class.field-input--error]="passwordControl.invalid && passwordControl.touched"
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+            [disabled]="loading()"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+          >
+            {{ showPassword() ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        @if (passwordControl.touched && passwordControl.hasError('required')) {
+          <p class="field-error">Password is required.</p>
+        }
+        @if (passwordControl.touched && passwordControl.hasError('minlength')) {
+          <p class="field-error">Password must be at least 8 characters.</p>
+        }
+        @if (passwordControl.touched && passwordControl.hasError('noUppercase')) {
+          <p class="field-error">Password must contain at least one uppercase letter.</p>
+        }
+        @if (passwordControl.touched && passwordControl.hasError('noLowercase')) {
+          <p class="field-error">Password must contain at least one lowercase letter.</p>
+        }
+        @if (passwordControl.touched && passwordControl.hasError('noDigit')) {
+          <p class="field-error">Password must contain at least one number.</p>
+        }
+        <!-- Password strength hint -->
+        @if (!passwordControl.touched) {
+          <p class="field-hint">Min. 8 chars with uppercase, lowercase, and a number.</p>
+        }
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-primary" [disabled]="loading()">
+        @if (loading()) {
+          <span class="spinner"></span>
+          Creating account…
+        } @else {
+          Create Account
+        }
+      </button>
+
+    </form>
+
+    <!-- ── Footer ─────────────────────────────────────────────────────────────── -->
+    <p class="login-link">
+      Already have an account?
+      <a routerLink="/login" class="link">Sign in</a>
+    </p>
+
+    }<!-- end @else -->
+  </div>
+</div>
+

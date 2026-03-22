@@ -3,17 +3,14 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Prevents authenticated admins from accessing the login page.
- * If the user is already logged in and is an admin → redirect to /dashboard.
- *
- * Usage in routes:
- *   { path: 'login', canActivate: [loginGuard], loadComponent: ... }
+ * Prevents already-authenticated users from accessing the login / register pages.
+ * Any logged-in user (any role) is redirected to /dashboard.
  */
 export const loginGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router      = inject(Router);
 
-  if (authService.isLoggedIn() && authService.isAdmin()) {
+  if (authService.isLoggedIn()) {
     return router.createUrlTree(['/dashboard']);
   }
 

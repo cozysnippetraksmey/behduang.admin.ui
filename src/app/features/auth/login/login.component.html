@@ -10,11 +10,51 @@
       <p class="login-subtitle">Sign in to manage your store</p>
     </div>
 
-    <!-- Error Banner -->
+    <!-- ✅ Success banner (email verified redirect) -->
+    @if (successMessage()) {
+      <div class="success-banner" role="status">
+        {{ successMessage() }}
+      </div>
+    }
+
+    <!-- ℹ️ Info / warning banner (token errors from verify-email redirect) -->
+    @if (infoMessage()) {
+      <div class="info-banner" role="status">
+        {{ infoMessage() }}
+      </div>
+    }
+
+    <!-- ⚠️ Error Banner -->
     @if (errorMessage()) {
       <div class="error-banner" role="alert">
         <span class="error-icon">⚠️</span>
         {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- 📧 Resend verification section -->
+    @if (showResend()) {
+      <div class="resend-section">
+        @if (resendSuccess()) {
+          <p class="resend-sent">📬 Verification email sent! Check your inbox.</p>
+        } @else {
+          <p class="resend-hint">
+            Haven't received the email? We'll resend it to
+            <strong>{{ form.getRawValue().email || 'your address' }}</strong>.
+          </p>
+          <button
+            type="button"
+            class="btn-resend"
+            [disabled]="resendLoading() || !form.getRawValue().email"
+            (click)="onResendVerification()"
+          >
+            @if (resendLoading()) {
+              <span class="spinner-sm"></span> Sending…
+            } @else {
+              Resend verification email
+            }
+          </button>
+        }
       </div>
     }
 
@@ -101,10 +141,10 @@
       <div #googleBtn id="google-signin-button"></div>
     </div>
 
-    <!-- Footer hint -->
+    <!-- Footer links -->
     <p class="login-hint">
-      Don't have a password yet? Sign in with Google first,<br />
-      then set a password in your account settings.
+      Don't have an account?
+      <a routerLink="/register" class="register-link">Create one</a>
     </p>
 
   </div>

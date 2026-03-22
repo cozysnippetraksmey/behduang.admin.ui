@@ -13,6 +13,7 @@ export class DashboardComponent {
   private readonly authService = inject(AuthService);
 
   readonly currentUser   = this.authService.currentUser;
+  readonly isAdmin       = this.authService.isAdmin;
   readonly logoutLoading = signal(false);
 
   async onLogout(): Promise<void> {
