@@ -1,29 +1,41 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../core/services/product.service';
-import type { Product, CreateProductRequest, UpdateProductRequest } from '../../core/models/product.model';
+import { ImageAdminService } from '../../core/services/image-admin.service';
+import type { Product, ProductImage, CreateProductRequest, UpdateProductRequest } from '../../core/models/product.model';
 
 interface ProductForm {
-  name: string;
+  name:        string;
   description: string;
-  price: number | '';
-  category: string;
-  stock: number | '';
-  imageUrl: string;
+  price:       number | '';
+  category:    string;
+  stock:       number | '';
+}
+
+/** Tracks a single image that has been selected and is being (or has been) uploaded. */
+interface PendingImage {
+  /** Local-only identifier for tracking within the signal array. */
+  localId:      string;
+  /** Object URL for immediate in-browser preview before the upload completes. */
+  previewUrl:   string;
+  status:       'uploading' | 'ready' | 'error';
+  /** API-assigned ID, available once status === 'ready'. */
+  imageId?:     string;
+  errorMessage?: string;
 }
 
 function emptyForm(): ProductForm {
-  return { name: '', description: '', price: '', category: '', stock: '', imageUrl: '' };
+  return { name: '', description: '', price: '', category: '', stock: '' };
 }
 
 /**
- * Products management page — full CRUD with image upload.
+ * Products management page — full CRUD with multi-image upload.
  *
- * Flow:
- *  1. List all products on init.
- *  2. Create: open modal → optionally upload image → submit → optimistic list update.
- *  3. Edit  : pre-fill modal → optionally replace image → submit → optimistic update.
- *  4. Delete: show confirm dialog → delete → remove from list.
+ * Image upload flow (create or edit):
+ *  1. User clicks "+" or drops files → files immediately start uploading in parallel.
+ *  2. Each file shows as a thumbnail with a spinner while uploading.
+ *  3. On completion the spinner is replaced with a ✓ badge; imageId is stored.
+ *  4. On submit, all ready imageIds are sent as `temporaryImageIds[]`.
  */
 @Component({
   selector: 'app-products',
@@ -34,6 +46,7 @@ function emptyForm(): ProductForm {
 })
 export class ProductsComponent implements OnInit {
   private readonly productService = inject(ProductService);
+  private readonly imageService   = inject(ImageAdminService);
 
   // ── List state ──────────────────────────────────────────────────────────────
   readonly products = signal<Product[]>([]);
@@ -49,10 +62,16 @@ export class ProductsComponent implements OnInit {
 
   form: ProductForm = emptyForm();
 
-  // ── Image upload state ───────────────────────────────────────────────────────
-  readonly uploading        = signal(false);
-  readonly uploadedImageId  = signal<string | null>(null);
-  readonly uploadedImageUrl = signal<string | null>(null);
+  // ── Image state ───────────────────────────────────────────────────────────────
+  /** Images already saved on the product (edit mode). */
+  readonly existingImages = signal<ProductImage[]>([]);
+  /** Images selected in this session — may still be uploading. */
+  readonly pendingImages  = signal<PendingImage[]>([]);
+
+  /** True while at least one pending image is still uploading. */
+  get anyImageUploading(): boolean {
+    return this.pendingImages().some((img) => img.status === 'uploading');
+  }
 
   // ── Delete confirm state ─────────────────────────────────────────────────────
   readonly deleteId = signal<string | null>(null);
@@ -82,8 +101,8 @@ export class ProductsComponent implements OnInit {
 
   openCreate(): void {
     this.form = emptyForm();
-    this.uploadedImageId.set(null);
-    this.uploadedImageUrl.set(null);
+    this.existingImages.set([]);
+    this.pendingImages.set([]);
     this.modalMode.set('create');
     this.editingId.set(null);
     this.modalError.set(null);
@@ -97,10 +116,9 @@ export class ProductsComponent implements OnInit {
       price:       product.price,
       category:    product.category,
       stock:       product.stock,
-      imageUrl:    product.imageUrl ?? '',
     };
-    this.uploadedImageId.set(null);
-    this.uploadedImageUrl.set(null);
+    this.existingImages.set([...product.images]);
+    this.pendingImages.set([]);
     this.modalMode.set('edit');
     this.editingId.set(product.id);
     this.modalError.set(null);
@@ -108,49 +126,98 @@ export class ProductsComponent implements OnInit {
   }
 
   closeModal(): void {
+    // Revoke all Object URLs to avoid memory leaks
+    this.pendingImages().forEach((img) => URL.revokeObjectURL(img.previewUrl));
+    this.pendingImages.set([]);
     this.modalOpen.set(false);
   }
 
   // ── Image upload ─────────────────────────────────────────────────────────────
 
-  async onImageFileChange(event: Event): Promise<void> {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+  onImageFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files?.length) return;
+    const files = Array.from(input.files);
+    input.value = ''; // reset so the same file can be re-selected
+    this.uploadFiles(files);
+  }
 
-    this.uploading.set(true);
-    this.modalError.set(null);
-    try {
-      const result = await this.productService.uploadImage(file);
-      this.uploadedImageId.set(result.imageId);
-      this.uploadedImageUrl.set(result.url);
-    } catch {
-      this.modalError.set('Image upload failed. Please try again.');
-    } finally {
-      this.uploading.set(false);
-      (event.target as HTMLInputElement).value = '';
+  removePendingImage(localId: string): void {
+    const img = this.pendingImages().find((i) => i.localId === localId);
+    if (img) URL.revokeObjectURL(img.previewUrl);
+    this.pendingImages.update((list) => list.filter((i) => i.localId !== localId));
+  }
+
+  private uploadFiles(files: File[]): void {
+    const MAX        = 10;
+    const totalUsed  = this.existingImages().length + this.pendingImages().length;
+    const remaining  = MAX - totalUsed;
+    if (remaining <= 0) {
+      this.modalError.set(`Maximum ${MAX} images per product.`);
+      return;
     }
+
+    const toUpload = files.slice(0, remaining);
+    if (files.length > remaining) {
+      this.modalError.set(`Only ${toUpload.length} image(s) added — maximum ${MAX} per product.`);
+    } else {
+      this.modalError.set(null);
+    }
+
+    // Create preview entries immediately so the UI responds without waiting for the network
+    const entries: PendingImage[] = toUpload.map((file) => ({
+      localId:    crypto.randomUUID(),
+      previewUrl: URL.createObjectURL(file),
+      status:     'uploading' as const,
+    }));
+    this.pendingImages.update((list) => [...list, ...entries]);
+
+    // Upload all files concurrently; update each entry independently
+    toUpload.forEach((file, idx) => {
+      const localId = entries[idx].localId;
+      this.imageService.uploadSingle(file).then(
+        (result) => {
+          this.pendingImages.update((list) =>
+            list.map((img) =>
+              img.localId === localId
+                ? { ...img, status: 'ready' as const, imageId: result.imageId }
+                : img,
+            ),
+          );
+        },
+        () => {
+          this.pendingImages.update((list) =>
+            list.map((img) =>
+              img.localId === localId
+                ? { ...img, status: 'error' as const, errorMessage: 'Upload failed' }
+                : img,
+            ),
+          );
+        },
+      );
+    });
   }
 
   // ── Save (create or update) ───────────────────────────────────────────────────
 
   async onSave(): Promise<void> {
+    if (this.anyImageUploading) return; // wait for uploads to finish
+
     this.saving.set(true);
     this.modalError.set(null);
     try {
-      // Build payload — prefer the newly uploaded temp image over any existing URL
+      const readyImageIds = this.pendingImages()
+        .filter((img) => img.status === 'ready')
+        .map((img) => img.imageId!);
+
       const base: CreateProductRequest = {
         name:        this.form.name,
         description: this.form.description,
         price:       Number(this.form.price),
         category:    this.form.category,
         stock:       Number(this.form.stock),
+        ...(readyImageIds.length > 0 && { temporaryImageIds: readyImageIds }),
       };
-
-      if (this.uploadedImageId()) {
-        base.temporaryImageId = this.uploadedImageId()!;
-      } else if (this.form.imageUrl) {
-        base.imageUrl = this.form.imageUrl;
-      }
 
       if (this.modalMode() === 'create') {
         const created = await this.productService.create(base);
@@ -158,10 +225,12 @@ export class ProductsComponent implements OnInit {
       } else {
         const payload: UpdateProductRequest = base;
         const updated = await this.productService.update(this.editingId()!, payload);
-        this.products.update((list) => list.map((p) => (p.id === updated.id ? updated : p)));
+        this.products.update((list) =>
+          list.map((p) => (p.id === updated.id ? updated : p)),
+        );
       }
 
-      this.modalOpen.set(false);
+      this.closeModal();
     } catch {
       this.modalError.set('Failed to save product. Please try again.');
     } finally {
@@ -171,13 +240,8 @@ export class ProductsComponent implements OnInit {
 
   // ── Delete ────────────────────────────────────────────────────────────────────
 
-  confirmDelete(id: string): void {
-    this.deleteId.set(id);
-  }
-
-  cancelDelete(): void {
-    this.deleteId.set(null);
-  }
+  confirmDelete(id: string): void { this.deleteId.set(id); }
+  cancelDelete():  void { this.deleteId.set(null); }
 
   async onDelete(): Promise<void> {
     const id = this.deleteId();

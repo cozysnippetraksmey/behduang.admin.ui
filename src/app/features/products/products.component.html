@@ -38,7 +38,14 @@
           @for (p of products(); track p.id) {
             <tr>
               <td>
-                @if (p.imageUrl) {
+                @if (p.images.length > 0) {
+                  <div class="product-thumb-wrap">
+                    <img [src]="p.images[0].url" [alt]="p.name" class="product-thumb" />
+                    @if (p.images.length > 1) {
+                      <span class="product-thumb-count">+{{ p.images.length - 1 }}</span>
+                    }
+                  </div>
+                } @else if (p.imageUrl) {
                   <img [src]="p.imageUrl" [alt]="p.name" class="product-thumb" />
                 } @else {
                   <div class="product-thumb product-thumb--empty">📦</div>
@@ -114,32 +121,66 @@
                    required placeholder="e.g. Tops, Bottoms, Accessories" />
           </div>
 
-          <!-- Image upload -->
+          <!-- ── Product Images ─────────────────────────────────────────── -->
           <div class="form-row">
-            <label>Product Image</label>
-            @if (uploadedImageUrl()) {
-              <div class="upload-preview">
-                <img [src]="uploadedImageUrl()!" alt="New image preview" class="upload-preview-img" />
-                <span class="badge badge--success">✓ Ready to attach</span>
-              </div>
-            } @else if (form.imageUrl) {
-              <div class="upload-preview">
-                <img [src]="form.imageUrl" alt="Current product image" class="upload-preview-img" />
-                <span class="badge">Current image</span>
-              </div>
-            }
-            <label class="file-upload-btn" [class.uploading]="uploading()">
-              {{ uploading() ? 'Uploading…' : '📷 Choose image' }}
-              <input type="file" accept="image/*" (change)="onImageFileChange($event)"
-                     [disabled]="uploading()" hidden />
-            </label>
+            <label>Product Images</label>
+
+            <div class="img-gallery">
+              <!-- Existing images (edit mode, read-only display) -->
+              @for (img of existingImages(); track img.id) {
+                <div class="img-gallery__thumb">
+                  <img [src]="img.url" [alt]="img.id" />
+                  <span class="img-gallery__badge img-gallery__badge--saved">saved</span>
+                </div>
+              }
+
+              <!-- Pending images (auto-uploading or ready) -->
+              @for (img of pendingImages(); track img.localId) {
+                <div class="img-gallery__thumb" [class.img-gallery__thumb--error]="img.status === 'error'">
+                  <img [src]="img.previewUrl" alt="Preview" />
+
+                  @if (img.status === 'uploading') {
+                    <div class="img-gallery__overlay">
+                      <span class="img-gallery__spinner"></span>
+                    </div>
+                  } @else if (img.status === 'ready') {
+                    <span class="img-gallery__badge img-gallery__badge--ready">✓</span>
+                  } @else {
+                    <span class="img-gallery__badge img-gallery__badge--error">✗</span>
+                  }
+
+                  <button class="img-gallery__remove" type="button"
+                          (click)="removePendingImage(img.localId)"
+                          [disabled]="img.status === 'uploading'"
+                          title="Remove">✕</button>
+                </div>
+              }
+
+              <!-- Add-more button (hidden once limit reached) -->
+              @if (existingImages().length + pendingImages().length < 10) {
+                <label class="img-gallery__add" [class.img-gallery__add--disabled]="anyImageUploading">
+                  <span>+</span>
+                  <input type="file"
+                         accept="image/jpeg,image/png,image/webp,image/gif"
+                         multiple
+                         (change)="onImageFilesSelected($event)"
+                         [disabled]="anyImageUploading"
+                         hidden />
+                </label>
+              }
+            </div>
+
+            <p class="form-hint">
+              {{ existingImages().length + pendingImages().length }} / 10 images
+              @if (anyImageUploading) { — uploading… }
+            </p>
           </div>
 
           <div class="modal-footer">
             <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="saving()">
               Cancel
             </button>
-            <button type="submit" class="btn-primary" [disabled]="saving() || uploading()">
+            <button type="submit" class="btn-primary" [disabled]="saving() || anyImageUploading">
               {{ saving() ? 'Saving…' : (modalMode() === 'create' ? 'Create Product' : 'Save Changes') }}
             </button>
           </div>

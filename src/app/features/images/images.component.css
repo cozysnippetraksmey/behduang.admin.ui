@@ -18,3 +18,146 @@
   font-size: 0.8125rem;
 }
 
+/* ── Upload section ──────────────────────────────────────────────────────── */
+.upload-section {
+  margin-bottom: 2rem;
+}
+
+/* ── Drop zone ───────────────────────────────────────────────────────────── */
+.upload-zone {
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  background: #fafafa;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+/* Angular binds [class.X] using the exact CSS selector spelling */
+.upload-zone--drag_over,
+.upload-zone--drag-over {
+  border-color: #4f46e5;
+  background: #eef2ff;
+}
+
+.upload-zone__icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 0.75rem;
+}
+
+.upload-zone__text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 0.25rem;
+}
+
+.upload-zone__hint {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0 0 1.25rem;
+}
+
+/* ── File queue ──────────────────────────────────────────────────────────── */
+.upload-queue {
+  margin-top: 1rem;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.upload-queue__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.875rem;
+}
+
+.upload-queue__count {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.upload-queue__list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-queue__item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.upload-queue__file-icon { font-size: 1rem; flex-shrink: 0; }
+
+.upload-queue__name {
+  flex: 1;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upload-queue__size {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.upload-queue__actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.875rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+/* ── Upload spinner (inside button) ─────────────────────────────────────── */
+.upload-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Upload results ──────────────────────────────────────────────────────── */
+.upload-results {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.upload-errors__list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.8125rem;
+}
+
+.upload-errors__list li {
+  margin-bottom: 0.25rem;
+}
+
+.upload-error__filename {
+  font-weight: 600;
+}

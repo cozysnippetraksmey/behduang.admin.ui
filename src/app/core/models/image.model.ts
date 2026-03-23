@@ -24,3 +24,15 @@ export interface UploadImageResult {
   expiresAt: string;
 }
 
+/** Per-file failure detail returned by POST /images/upload-multiple. */
+export interface UploadError {
+  filename: string;
+  message: string;
+}
+
+/** Response shape from POST /images/upload-multiple (partial success is possible). */
+export interface MultipleUploadResult {
+  results: UploadImageResult[];
+  errors: UploadError[];
+}
+

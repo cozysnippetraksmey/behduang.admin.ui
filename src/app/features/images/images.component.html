@@ -5,20 +5,102 @@
       <h1 class="page-title">Images</h1>
       <p class="page-subtitle">Manage uploaded product images. Total: {{ total() }}</p>
     </div>
-    <label class="btn-primary file-upload-btn" [class.uploading]="uploading()">
-      {{ uploading() ? 'Uploading…' : '📤 Upload Image' }}
-      <input type="file" accept="image/*" (change)="onUpload($event)"
-             [disabled]="uploading()" hidden />
-    </label>
   </div>
 
   @if (error()) {
     <div class="alert-error">{{ error() }}</div>
   }
 
-  @if (uploadSuccess()) {
-    <div class="alert-success">✅ {{ uploadSuccess() }}</div>
-  }
+  <!-- ── Upload Section ───────────────────────────────────────────────────── -->
+  <div class="upload-section">
+
+    <!-- Drop Zone -->
+    <div
+      class="upload-zone"
+      [class.upload-zone--drag_over]="isDragOver()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+    >
+      <span class="upload-zone__icon">📁</span>
+      <p class="upload-zone__text">Drag &amp; drop images here</p>
+      <p class="upload-zone__hint">or click to select — JPG, PNG, WebP, GIF &nbsp;·&nbsp; up to 10 files per batch</p>
+      <label class="btn-primary" [class.btn-primary--disabled]="uploading()">
+        Select Images
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          multiple
+          (change)="onFilesSelected($event)"
+          [disabled]="uploading()"
+          hidden
+        />
+      </label>
+    </div>
+
+    <!-- Staged file queue (shown after selection, before upload) -->
+    @if (selectedFiles().length > 0) {
+      <div class="upload-queue">
+        <div class="upload-queue__header">
+          <span class="upload-queue__count">
+            {{ selectedFiles().length }} file{{ selectedFiles().length === 1 ? '' : 's' }} queued
+          </span>
+          <button class="btn-secondary" (click)="clearAll()" [disabled]="uploading()">Clear all</button>
+        </div>
+
+        <ul class="upload-queue__list">
+          @for (file of selectedFiles(); track file.name; let i = $index) {
+            <li class="upload-queue__item">
+              <span class="upload-queue__file-icon">🖼️</span>
+              <span class="upload-queue__name" [title]="file.name">{{ file.name }}</span>
+              <span class="upload-queue__size">{{ formatBytes(file.size) }}</span>
+              <button
+                class="btn-icon btn-delete"
+                (click)="removeFile(i)"
+                [disabled]="uploading()"
+                title="Remove file"
+              >✕</button>
+            </li>
+          }
+        </ul>
+
+        <div class="upload-queue__actions">
+          <button class="btn-primary" (click)="startUpload()" [disabled]="uploading()">
+            @if (uploading()) {
+              <span class="upload-spinner"></span> Uploading…
+            } @else {
+              📤 Upload {{ selectedFiles().length }} Image{{ selectedFiles().length === 1 ? '' : 's' }}
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Upload results (shown after an upload completes) -->
+    @if (uploadResults().length > 0 || uploadErrors().length > 0) {
+      <div class="upload-results">
+        @if (uploadResults().length > 0) {
+          <div class="alert-success">
+            ✅ {{ uploadResults().length }} image{{ uploadResults().length === 1 ? '' : 's' }} uploaded successfully.
+          </div>
+        }
+        @if (uploadErrors().length > 0) {
+          <div class="alert-error">
+            <strong>❌ {{ uploadErrors().length }} upload{{ uploadErrors().length === 1 ? '' : 's' }} failed:</strong>
+            <ul class="upload-errors__list">
+              @for (err of uploadErrors(); track err.filename) {
+                <li>
+                  <span class="upload-error__filename">{{ err.filename }}</span>
+                  &mdash; {{ err.message }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+        <button class="btn-secondary" (click)="clearAll()">Dismiss</button>
+      </div>
+    }
+  </div>
 
   <!-- ── Images Table ─────────────────────────────────────────────────────── -->
   @if (loading()) {
@@ -50,7 +132,8 @@
                      (error)="$any($event.target).style.display='none'" />
               </td>
               <td>
-                <span class="badge" [class.badge--active]="img.status === 'active'"
+                <span class="badge"
+                      [class.badge--active]="img.status === 'active'"
                       [class.badge--temp]="img.status === 'temp'">
                   {{ img.status }}
                 </span>
@@ -112,4 +195,3 @@
     </div>
   </div>
 }
-
