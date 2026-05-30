@@ -3,7 +3,7 @@ name: Deploy Frontend
 on:
   push:
     branches:
-      - main
+      - production
       - staging
 
 jobs:
@@ -26,7 +26,16 @@ jobs:
       - name: Build
         run: npm run build -- --configuration production
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/staging'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist/behdaung.admin.ui/browser --project-name behdaung-admin-ui-staging
+
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/production'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
