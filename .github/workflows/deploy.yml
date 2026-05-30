@@ -28,16 +28,18 @@ jobs:
 
       - name: Deploy to Staging
         if: github.ref == 'refs/heads/staging'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/behdaung.admin.ui/browser --project-name behdaung-admin-ui-staging
+          projectName: behdaung-admin-ui-staging
+          directory: dist/behdaung.admin.ui/browser
 
       - name: Deploy to Production
         if: github.ref == 'refs/heads/production'
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy dist/behdaung.admin.ui/browser --project-name behdaung-admin-ui
+          projectName: behdaung-admin-ui
+          directory: dist/behdaung.admin.ui/browser
